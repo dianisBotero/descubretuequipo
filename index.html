@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Descubre Tu Equipo!</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin-slow 2s linear infinite;
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-800 flex flex-col items-center justify-center p-4 text-white">
+
+    <div class="bg-white text-gray-800 rounded-3xl shadow-2xl p-8 max-w-lg w-full text-center transform transition-all duration-300 hover:scale-105">
+        <h1 class="text-4xl font-extrabold mb-6 text-indigo-700">
+            ¡Descubre Tu Equipo!
+        </h1>
+
+        <p class="text-lg mb-8">
+            Ingresa tu nombre para ver a qué equipo perteneces.
+        </p>
+
+        <form id="teamForm" class="space-y-6">
+            <input
+                type="text"
+                id="nameInput"
+                placeholder="Escribe tu nombre aquí (ej. 'Carlos', 'Mariana')..."
+                class="w-full p-4 border-2 border-purple-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-transparent text-lg placeholder-gray-400"
+            />
+
+            <button
+                type="submit"
+                id="submitButton"
+                class="w-full bg-indigo-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-600 transition-all duration-300 ease-in-out shadow-lg transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-indigo-400 active:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                ¡Ver Mi Equipo!
+            </button>
+        </form>
+
+        <div id="spinningContainer" class="mt-8 hidden">
+            <div class="relative w-24 h-24 mx-auto mb-4">
+                <!-- Simple spinning animation -->
+                <div class="absolute inset-0 border-4 border-t-4 border-indigo-500 rounded-full animate-spin-slow"></div>
+                <div class="absolute inset-0 flex items-center justify-center text-indigo-700 text-xl font-bold">
+                    ?
+                </div>
+            </div>
+            <p class="text-xl font-semibold text-purple-700">Calculando...</p>
+        </div>
+
+        <div id="resultContainer" class="mt-8 hidden bg-green-100 border-l-4 border-green-500 text-green-700 p-6 rounded-xl shadow-md animate-fade-in">
+            <p class="text-2xl font-bold mb-2">¡Felicitaciones!</p>
+            <p id="teamNameResult" class="text-3xl font-extrabold text-green-800 mb-4">
+                <!-- Team name will be inserted here -->
+            </p>
+            <h3 class="text-xl font-semibold mb-2 text-green-700">Integrantes del equipo:</h3>
+            <ul id="teamMembersList" class="list-disc list-inside text-left text-green-700 max-h-40 overflow-y-auto mx-auto w-fit">
+                <!-- Team members will be inserted here -->
+            </ul>
+            <button
+                id="resetButton"
+                class="mt-6 bg-purple-500 text-white font-bold py-2 px-4 rounded-xl hover:bg-purple-600 transition duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-purple-400"
+            >
+                Volver a Empezar
+            </button>
+        </div>
+
+        <div id="errorContainer" class="mt-8 hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-6 rounded-xl shadow-md animate-fade-in">
+            <p id="errorMessage" class="text-lg font-semibold"><!-- Error message will be inserted here --></p>
+            <button
+                id="errorResetButton"
+                class="mt-6 bg-purple-500 text-white font-bold py-2 px-4 rounded-xl hover:bg-purple-600 transition duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-purple-400"
+            >
+                Intentar de Nuevo
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const nameInput = document.getElementById('nameInput');
+        const teamForm = document.getElementById('teamForm');
+        const submitButton = document.getElementById('submitButton');
+        const spinningContainer = document.getElementById('spinningContainer');
+        const resultContainer = document.getElementById('resultContainer');
+        const teamNameResultElement = document.getElementById('teamNameResult');
+        const teamMembersList = document.getElementById('teamMembersList');
+        const resetButton = document.getElementById('resetButton');
+        const errorContainer = document.getElementById('errorContainer');
+        const errorMessageElement = document.getElementById('errorMessage');
+        const errorResetButton = document.getElementById('errorResetButton');
+
+        // Define the team assignments and their members
+        const teams = {
+            'equipo 1': {
+                name: 'Equipo 1',
+                members: [
+                    'Joshua (21)',
+                    'David (10)',
+                    'Ian (12)',
+                    'Carlos (21 - Monitor)',
+                    'Brianna (16 - Monitor)'
+                ],
+                participants: ['joshua', 'david', 'ian', 'carlos', 'brianna'] // For easy lookup
+            },
+            'equipo 2': {
+                name: 'Equipo 2',
+                members: [
+                    'Daniel (14)',
+                    'Oliver (13)',
+                    'Nahim (17 - Monitor)'
+                ],
+                participants: ['daniel', 'oliver', 'nahim']
+            },
+            'equipo 3': {
+                name: 'Equipo 3',
+                members: [
+                    'Brayan (14)',
+                    'Mateo (13)',
+                    'Sebastian (14)',
+                    'Raul (16 - Monitor)'
+                ],
+                participants: ['brayan', 'mateo', 'sebastian', 'raul']
+            },
+            'equipo 4': {
+                name: 'Equipo 4',
+                members: [
+                    'Pedro (11)',
+                    'Mariana (10)',
+                    'Yessica (19 - Monitor)'
+                ],
+                participants: ['pedro', 'mariana', 'yessica']
+            },
+            'equipo 5': {
+                name: 'Equipo 5',
+                members: [
+                    'Salma (13)',
+                    'Cloe (12)',
+                    'Samuel (12)',
+                    'Alejandro (17 - Monitor)'
+                ],
+                participants: ['salma', 'cloe', 'samuel', 'alejandro']
+            }
+        };
+
+        // Create a reverse lookup for names to team keys
+        const nameToTeamKey = {};
+        for (const teamKey in teams) {
+            teams[teamKey].participants.forEach(participantName => {
+                nameToTeamKey[participantName] = teamKey;
+            });
+        }
+
+        // Function to reset the application state
+        function resetAppState() {
+            nameInput.value = '';
+            spinningContainer.classList.add('hidden');
+            resultContainer.classList.add('hidden');
+            errorContainer.classList.add('hidden');
+            submitButton.disabled = false;
+            nameInput.disabled = false;
+            nameInput.focus(); // Focus input after reset
+        }
+
+        // Handle form submission
+        teamForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const name = nameInput.value.toLowerCase().trim();
+            const teamKey = nameToTeamKey[name];
+
+            if (teamKey && teams[teamKey]) {
+                // Hide error if any
+                errorContainer.classList.add('hidden');
+
+                // Show spinning animation
+                spinningContainer.classList.remove('hidden');
+                submitButton.disabled = true; // Disable button during spin
+                nameInput.disabled = true; // Disable input during spin
+
+                // Simulate "spinning" delay
+                setTimeout(() => {
+                    spinningContainer.classList.add('hidden'); // Hide spinning
+                    resultContainer.classList.remove('hidden'); // Show result
+
+                    // Update team name
+                    teamNameResultElement.innerHTML = `Estás en el <span class="underline">${teams[teamKey].name}</span>`;
+
+                    // Update team members list
+                    teamMembersList.innerHTML = ''; // Clear previous list
+                    teams[teamKey].members.forEach(member => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = member;
+                        teamMembersList.appendChild(listItem);
+                    });
+
+                }, 2000); // 2 seconds delay
+            } else {
+                // Show error message
+                errorMessageElement.textContent = 'Nombre no encontrado. Por favor, verifica que lo hayas escrito correctamente.';
+                errorContainer.classList.remove('hidden');
+                submitButton.disabled = false; // Enable button
+                nameInput.disabled = false; // Enable input
+            }
+        });
+
+        // Handle reset buttons
+        resetButton.addEventListener('click', resetAppState);
+        errorResetButton.addEventListener('click', resetAppState);
+
+        // Initial focus on input when page loads
+        window.onload = function() {
+            nameInput.focus();
+        };
+
+        // Enable/disable submit button based on input value
+        nameInput.addEventListener('input', function() {
+            submitButton.disabled = !nameInput.value.trim();
+        });
+
+        // Initial state of submit button
+        submitButton.disabled = !nameInput.value.trim();
+
+    </script>
+</body>
+</html>
